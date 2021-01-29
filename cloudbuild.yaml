@@ -1,0 +1,40 @@
+steps:
+  - name: maven:3-jdk-8
+    entrypoint: mvn
+    args: ["test"]
+  - name: maven:3-jdk-8
+    entrypoint: mvn
+    args: ["package", "-Dmaven.test.skip=true"]
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}", "--build-arg=JAR_FILE=target/${_JAR_NAME}.jar", "."]
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}']
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - '${_CONTAINER_NAME}'
+    - '--image'
+    - 'gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}'
+    - '--region'
+    - '${_REGION}'
+    - '--platform'
+    - 'managed'
+    - '--port'
+    - '${_PORT_NAME}'
+
+
+images: ["gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}"]
+
+substitutions:
+    _PROJ_NAME: my-kubernetes-project-302602
+    _CONTAINER_NAME: spring-boot-cluster
+    _CONTAINER_TAG: latest
+    _REGION: us-central1-c
+    _JAR_NAME: hubconnect-0.0.1-SNAPSHOT
+    _PORT_NAME: '9090'
+options:
+    substitution_option: 'ALLOW_LOOSE'
