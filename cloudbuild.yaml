@@ -11,20 +11,20 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}']
   # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-    - 'run'
-    - 'deploy'
-    - '${_CONTAINER_NAME}'
-    - '--image'
-    - 'gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}'
-    - '--region'
-    - '${_REGION}'
-    - '--platform'
-    - 'managed'
-    - '--port'
-    - '${_PORT_NAME}'
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', 'k8s/']
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=${_REGION}'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=${_CONTAINER_NAME}'
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: [
+        'set', 
+        'image', 
+        'deployment', 
+       ]
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=<cluster-zone>'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=<cluster-name>'
 
 
 images: ["gcr.io/${_PROJ_NAME}/${_CONTAINER_NAME}:${_CONTAINER_TAG}"]
